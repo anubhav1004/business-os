@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { runAgent } from '@/lib/ai/agent';
-import { createSession, createMessage, getUserByEmail } from '@/lib/db/client';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,31 +16,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { message, sessionId, userEmail } = body;
 
-    if (!message || !userEmail) {
+    if (!message) {
       return NextResponse.json(
-        { error: 'Missing required fields: message, userEmail' },
+        { error: 'Missing required field: message' },
         { status: 400 }
       );
     }
 
-    // Get user from database
-    const user = getUserByEmail(userEmail);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Create or resume session
-    let currentSessionId = sessionId;
-    if (!currentSessionId) {
-      currentSessionId = `session_${Date.now()}_${user.id}`;
-      createSession(currentSessionId, user.id);
-    }
-
-    // Save user message to database
-    createMessage(currentSessionId, 'user', message);
+    // Generate session ID if not provided
+    const currentSessionId = sessionId || `session_${Date.now()}`;
 
     // Create streaming response
     const encoder = new TextEncoder();
@@ -130,16 +113,7 @@ export async function POST(request: NextRequest) {
                 break;
 
               case 'done':
-                // Save assistant response to database
-                if (fullResponse) {
-                  createMessage(
-                    currentSessionId,
-                    'assistant',
-                    fullResponse,
-                    'coordinator',
-                    { toolCalls }
-                  );
-                }
+                // Session complete
                 break;
             }
           }
@@ -187,27 +161,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const sessionId = searchParams.get('sessionId');
-
-    if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Missing sessionId parameter' },
-        { status: 400 }
-      );
-    }
-
-    const { getSessionMessages } = await import('@/lib/db/client');
-    const messages = getSessionMessages(sessionId);
-
-    return NextResponse.json({ messages });
-  } catch (error) {
-    console.error('Error fetching chat history:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  return NextResponse.json({ status: 'Chat API is running' });
 }
