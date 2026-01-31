@@ -1,0 +1,27 @@
+{
+  "name": "Business AI - Multi-Agent Platform",
+  "short_name": "Business AI",
+  "description": "Analyze your business using specialized AI agents",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#1a1a1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Analysis",
+      "short_name": "New",
+      "description": "Start a new business analysis",
+      "url": "/"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "prefer_related_applications": false
+}
