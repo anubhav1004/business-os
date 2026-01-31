@@ -634,30 +634,31 @@ export async function* runAgent(
 
         // Execute each tool
         for (const toolCall of message.tool_calls) {
-          const toolName = toolCall.function.name;
+          const tc = toolCall as any;
+          const toolName = tc.function.name;
           let toolArgs = {};
           try {
-            toolArgs = JSON.parse(toolCall.function.arguments);
+            toolArgs = JSON.parse(tc.function.arguments);
           } catch {
             toolArgs = {};
           }
 
           yield {
             type: 'tool_call',
-            content: { id: toolCall.id, name: toolName, args: toolArgs },
+            content: { id: tc.id, name: toolName, args: toolArgs },
           };
 
           const toolResult = executeTool(toolName, toolArgs);
 
           yield {
             type: 'tool_result',
-            content: { id: toolCall.id, name: toolName, result: toolResult },
+            content: { id: tc.id, name: toolName, result: toolResult },
           };
 
           // Add tool result to messages
           messages.push({
             role: 'tool',
-            tool_call_id: toolCall.id,
+            tool_call_id: tc.id,
             content: toolResult,
           } as any);
         }
